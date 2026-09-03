@@ -28,7 +28,7 @@ jobs:
           server: ${{ vars.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: ${{ vars.APP_NAME }}/${{ vars.ENV_NAME }}/
+          server-dir: ${{ vars.APP_NAME }}/test/
           local-dir: dist/
 
       - name: Install TestCafe
@@ -66,5 +66,5 @@ jobs:
           server: ${{ vars.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: ${{ vars.APP_NAME }}/${{ vars.ENV_NAME }}/
+          server-dir: ${{ vars.APP_NAME }}/live/
           local-dir: dist/
