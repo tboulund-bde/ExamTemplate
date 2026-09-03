@@ -9,34 +9,42 @@ on:
 jobs:
   integration:
     runs-on: ubuntu-latest
-    container:
-      image: node
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build website
         run: npm run build -- --base=./
 
-      - name: Store artifacts
+      - name: Store website
         uses: actions/upload-artifact@v4
         with:
           name: todo
-          path: |
-            dist/
-            test/
+          path: dist/
 
   delivery:
     needs: integration
     runs-on: ubuntu-latest
+
     steps:
-      - name: Load artifacts
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Load website
         uses: actions/download-artifact@v4
         with:
           name: todo
+          path: dist/
 
       - name: FTP delivery
         uses: SamKirkland/FTP-Deploy-Action@4.3.3
@@ -47,25 +55,28 @@ jobs:
           server-dir: ${{ vars.SUBDOMAIN }}/test/
           local-dir: dist/
 
-      - name: Install TestCafe
-        run: npm install -g testcafe
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
 
-      # - name: Install Chromium
-      #   run: | 
-      #     sudo apt-get update
-      #     sudo apt-get install -y chromium
+      - name: Install dependencies
+        run: npm ci
 
       - name: Run tests
-        run: testcafe chrome:headless test/e2e/* --browser-init-timeout 60000
+        run: npx testcafe chrome:headless test/e2e/* --browser-init-timeout 60000
 
   deployment:
     needs: delivery
     runs-on: ubuntu-latest
+
     steps:
-      - name: Load artifacts
+      - name: Load website
         uses: actions/download-artifact@v4
         with:
           name: todo
+          path: dist/
 
       - name: FTP deploy
         uses: SamKirkland/FTP-Deploy-Action@4.3.3
