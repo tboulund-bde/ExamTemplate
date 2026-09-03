@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: node
+    environment: Test
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,7 +28,7 @@ jobs:
           server: ${{ vars.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: test/todo/
+          server-dir: ${{ vars.APP_NAME }}/${{ vars.ENV_NAME }}/
           local-dir: dist/
 
       - name: Install TestCafe
@@ -65,5 +66,5 @@ jobs:
           server: ${{ vars.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: live/todo/
+          server-dir: ${{ vars.APP_NAME }}/${{ vars.ENV_NAME }}/
           local-dir: dist/
