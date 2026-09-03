@@ -1,0 +1,69 @@
+name: Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  integration-delivery:
+    runs-on: ubuntu-22.04
+    container:
+      image: node
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build website
+        run: npm run build
+
+      - name: FTP delivery
+        uses: SamKirkland/FTP-Deploy-Action@4.3.3
+        with:
+          server: ${{ vars.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: test/todo/
+          local-dir: dist/
+
+      - name: Install TestCafe
+        run: npm install -g testcafe
+
+      - name: Update APT
+        run: apt-get update
+
+      - name: Install Chromium
+        run: apt-get install -y chromium
+
+      - name: Run tests
+        run: testcafe chromium:headless test/* --browser-init-timeout 60000
+
+      - name: Store artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: todo
+          path: dist/
+
+  deployment:
+    needs: integration-delivery
+    runs-on: ubuntu-latest
+    environment: Live
+    steps:
+      - name: Load artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: todo
+          path: dist/
+
+      - name: FTP deploy
+        uses: SamKirkland/FTP-Deploy-Action@4.3.3
+        with:
+          server: ${{ vars.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: live/todo/
+          local-dir: dist/
